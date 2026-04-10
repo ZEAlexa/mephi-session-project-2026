@@ -1,0 +1,48 @@
+    1  sudo nmcli con del enp0s3
+    2  sudo nmcli con add type ethernet con-name enp0s3 ifname enp0s3 ipv4.method manual ipv4.addresses 192.168.1.100/24 ipv4.gateway 192.168.1.1 ipv4.dns 8.8.8.8
+    3  sudo hostnamectl set-hostname mephi-2026.domain.local
+    4  ping -c 8.8.8.8 > /tmp/network_check.txt
+    5  ping -c 4 8.8.8.8 > /tmp/network_check.txt
+    6  ping -c 4 192.168.1.1 >> /tmp/network_check.txt
+    7  cat /tmp/network_check.txt
+    8  sudo dnf install nginx
+    9  sudo dnf install tcpdump
+   10  sudo dnf install libcap-ng-utils
+   11  cd /tmp
+   12  dnf download tcpdump
+   13  sudo rpm -ivh tcpdump-4.99.5-1.red80.x86_64.rpm 
+   14  sudo parted /dev/sdb mklabel gpt mkpart primary ext4 0% 100%
+   15  sudo mkfs.ext4 -L MEPHI_DATA /dev/sdb1
+   16  sudo mkdir -p /data/mephi-web
+   17  echo 'LABEL=MEPHI_DATA /data/mephi-web ext4 defaults 0 2' | sudo tee -a /etc/fstab
+   18  systemctl daemon-reload
+   19  sudo mount -a
+   20  df -h | grep mephi
+   21  sudo systemctl start nginx
+   22  sudo systemctl enable nginx
+   23  sudo journalctl -u nginx --since "5 minutes ago" > /tmp/nginx_recent_logs.txt
+   24  cat /tmp/nginx_recent_logs.txt 
+   25  sudo groupadd mephi-devs
+   26  sudo useradd -G mephi-devs mephi-admin
+   27  sudo passwd mephi-admin
+   28  sudo chown -R mephi-admin:mephi-devs /data/mephi-web
+   29  sudo chmod 2775 /data/mephi-web
+   30  getenforce
+   31  sudo vim /etc/nginx/nginx.conf
+   32  sudo semanage fcontext -a -t httpd_sys_content_t "/data/mephi-web(/.*)?"
+   33  sudo restorecon -Rv /data/mephi-web
+   34  sudo systemctl restart nginx
+   35  sudo chmod u-s /usr/sbin/tcpdump
+   36  sudo setcap 'cap_net_raw+ep cap_net_admin+ep' /usr/sbin/tcpdump
+   37  sudo -u mephi-admin tcpdump --help
+   38  sudo vim /etc/ssh/denied_users
+   39  sudo vim /etc/pam.d/login
+   40  sudo vim /etc/pam.d/sshd
+   41  sudo vim /etc/pam.d/su
+   42  sudo vim /etc/ssh/ssh_config
+   43  sudo systemctl restart sshd
+   44  su - root
+   45  sudo -u mephi-admin sh -c 'echo "Hello from Student: 370737" > /data/mephi-web/index.html'
+   46  curl http://localhost
+   47  curl http://192.168.1.100
+   48  history > /tmp/project_history.txt
